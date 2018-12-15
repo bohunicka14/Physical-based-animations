@@ -2,24 +2,25 @@ from tkinter import *
 
 
 class PolyObject:
-    def __init__(self, canvas, x, y):
+    def __init__(self, canvas, x, y, tag):
         self.canvas = canvas
         self.x = x
         self.y = y
+        self.tag = tag
 
-    def draw(self, coords, color, tg):
+    def draw(self, coords, color):
         """ Coords - budem posielat suradnice bodov na vykreslenie poly-lineu
         """
         print(type(coords))
-        self.id = self.canvas.create_polygon(*coords, fill=color, outline='black', tag=tg)
+        self.id = self.canvas.create_polygon(*coords, fill=color, outline='black', tag=self.tag)
 
     def is_active(self, state):
         """ Zmena outline farby
         """
         if state == 1:
-            self.canvas.itemconfig(self.id, outline='red')
+            self.canvas.itemconfig(self.id, outline='red', width=3)
         else:
-            self.canvas.itemconfig(self.id, outline='black')
+            self.canvas.itemconfig(self.id, outline='black', width=1)
 
     def move(self, xx, yy):
         self.canvas.move(self.id, xx, yy)
@@ -54,13 +55,13 @@ class Playground(Tk):
         """
         coords_1 = polygons[0]
         coords_2 = polygons[1]
-        p1 = PolyObject(self.playground, 100, 100)
-        p1.draw(coords_1, 'white', 'object1')
-        print('Suradnice bodov objektu p1: ', self.playground.coords(p1.id))
-        p2 = PolyObject(self.playground, 300, 300)
-        p2.draw(coords_2, 'red', 'object2')
-        self.polygons_array.append(p1)
-        self.polygons_array.append(p1)
+        self.p1 = PolyObject(self.playground, 100, 100, 'object1')
+        self.p1.draw(coords_1, 'white')
+        print('Suradnice bodov objektu p1: ', self.playground.coords(self.p1.id))
+        self.p2 = PolyObject(self.playground, 300, 300, 'object2')
+        self.p2.draw(coords_2, 'navy')
+        self.polygons_array.append(self.p1)
+        self.polygons_array.append(self.p2)
         print(self.polygons_array)
 
     def click(self, event):
@@ -70,6 +71,13 @@ class Playground(Tk):
             self.obj_tag = self.playground.gettags(event.widget.find_closest(event.x, event.y))[0]
         if 'object' in self.obj_tag:
             self.playground.lift(self.obj_id)
+        if 'object1' in self.obj_tag:
+            self.p1.is_active(1)
+            self.p2.is_active(2)
+        if 'object2' in self.obj_tag:
+            self.p2.is_active(1)
+            self.p1.is_active(2)
+
         self.initial_coords = self.playground.coords(self.obj_id)
         self.ex, self.ey = event.x, event.y
 
