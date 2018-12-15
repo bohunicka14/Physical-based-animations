@@ -40,6 +40,8 @@ class Playground(Tk):
         self.playground.bind("<B1-Motion>", self.drag)
 
     def load_from_file(self, file):
+        """ Naciatnie suradnic zo suboru
+        """
         coords = []
         f = open(file, 'r')
 
@@ -61,12 +63,23 @@ class Playground(Tk):
         self.polygons_array.append(p1)
         print(self.polygons_array)
 
+    def click(self, event):
+        self.obj_id = event.widget.find_closest(event.x, event.y)[0]
+        # print(self.obj_id)
+        if self.playground.gettags(event.widget.find_closest(event.x, event.y)):
+            self.obj_tag = self.playground.gettags(event.widget.find_closest(event.x, event.y))[0]
+        if 'object' in self.obj_tag:
+            self.playground.lift(self.obj_id)
+        self.initial_coords = self.playground.coords(self.obj_id)
+        self.ex, self.ey = event.x, event.y
 
-    def click(self, e):
-        ...
+    def drag(self, event):
+        if self.obj_tag == ('object' + str(self.obj_id)):
+            self.playground.move(self.obj_tag, event.x - self.ex, event.y - self.ey)
+            self.ex, self.ey = event.x, event.y
 
-    def drag(self, e):
-        ...
+    def v_clip(self):
+        pass
 
     def clip_vertex(self):
         pass
