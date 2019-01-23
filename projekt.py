@@ -17,6 +17,7 @@ def multiply(m, array):
 
 
 class PolyObject:
+    ### !!!!!!! Pridat pole alebo zoznam so zapamatanymi hranami, ktore spajaju vrcholy a pamatat si vrcholy
     def __init__(self, canvas, x, y, tag):
         self.canvas = canvas
         self.x = x
@@ -45,6 +46,15 @@ class PolyObject:
 
     def set_coords(self, coords):
         self.coords = coords
+        self.vertices = []
+        self.edges = []
+        for i in range(0, len(self.coords), 2):
+            # print(len(self.coords), self.coords[i], self.coords[i+1])
+            self.vertices.append((self.coords[i], self.coords[i+1]))
+        for i in range(len(self.vertices) - 1):
+            self.edges.append([self.vertices[i], self.vertices[i+1]])
+        self.edges.append([self.vertices[0], self.vertices[-1]])
+        # print(len(self.edges))
 
     def get_centroid(self):
         self.coords.append(self.coords[0])
@@ -164,6 +174,9 @@ class Playground(Tk):
 
         self.p1.set_coords(self.playground.coords(self.p1.id))
         self.p2.set_coords(self.playground.coords(self.p2.id))
+        print('coords   ', self.p1.coords)
+
+        self.v_clip(self.p1, self.p2, None, None)
 
     def redraw_canvas(self):
         self.playground.delete('all')
@@ -200,20 +213,21 @@ class Playground(Tk):
         self.ex, self.ey = event.x, event.y
 
     def v_clip(self, A, B, X, Y):
+        print(A, B, X, Y)
         while True:
-            if self.pair_type() == "VV":
+            if self.pair_type(X, Y) == "VV":
                 if self.clip_vertex():
                     continue
                 if self.clip_vertex():
                     continue
                 return
-            if self.pair_type() == "VE":
+            if self.pair_type(X, Y) == "VE":
                 if self.clip_vertex():
                     continue
                 if self.clip_edge():
                     continue
                 return
-            if self.pair_type() == "EE":
+            if self.pair_type(X, Y) == "EE":
                 if self.clip_edge():
                     continue
                 if self.clip_edge():
@@ -222,6 +236,8 @@ class Playground(Tk):
             if Y is None:
                 return None
 
+    def pair_type(self, feature1, feature2):
+        pass
 
     def clip_vertex(self, V, N, Sn):
         # V - vrchol, N - cast, ktora bude updatovana, Sn - set of clipping feature pairs
@@ -238,17 +254,11 @@ class Playground(Tk):
             pass
         return N != M           # true if feature changed
 
-
     def clip_edge(self, E, N, Sn):
         self.clear_all(Sn)
         for x, y in Sn:
             pass
         return self.update_clear(N, Sn)
-
-
-    def pair_type(self):
-        # vrati bud VV, VE, EE
-        return
 
 
 if __name__ == '__main__':
