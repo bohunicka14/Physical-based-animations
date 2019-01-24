@@ -15,6 +15,54 @@ def multiply(m, array):
         array[i + 1] = result_y
     return array
 
+class Feature():
+
+    def mark(self):
+        self.marked = True
+
+    def clear(self):
+        self.marked = False
+
+class Vertex(Feature):
+
+    def __init__(self, x, y, marked = False):
+        self.x = x
+        self.y = y
+        self.marked = marked
+
+class Edge(Feature):
+
+    def __init__(self, v1, v2, marked = False):
+        self.v1 = v1
+        self.v2 = v2
+        self.marked = marked
+
+class FeaturePair():
+
+    def __init__(self, f1, f2):
+        self.f1 = f1
+        self.f2 = f2
+
+    def type(self):
+        result = ''
+        if isinstance(self.f1, Edge):
+            result += 'E'
+        elif isinstance(self.f1, Vertex):
+            result += 'V'
+
+        if isinstance(self.f2, Edge):
+            result += 'E'
+        elif isinstance(self.f2, Vertex):
+            result += 'V'
+
+        return result
+
+    def swap(self):
+        tmp = self.f1
+        self.f1 = self.f2
+        self.f2 = tmp
+
+
 
 class PolyObject:
     ### !!!!!!! Pridat pole alebo zoznam so zapamatanymi hranami, ktore spajaju vrcholy a pamatat si vrcholy
@@ -24,6 +72,8 @@ class PolyObject:
         self.y = y
         self.tag = tag
         self.is_active = 0
+        self.edges = []
+        self.vertices = []
 
     def draw(self, coords, color):
         """ Coords - budem posielat suradnice bodov na vykreslenie poly-lineu
@@ -50,11 +100,12 @@ class PolyObject:
         self.edges = []
         for i in range(0, len(self.coords), 2):
             # print(len(self.coords), self.coords[i], self.coords[i+1])
-            self.vertices.append((self.coords[i], self.coords[i+1]))
+            self.vertices.append(Vertex(self.coords[i], self.coords[i+1]))
         for i in range(len(self.vertices) - 1):
-            self.edges.append([self.vertices[i], self.vertices[i+1]])
-        self.edges.append([self.vertices[0], self.vertices[-1]])
+            self.edges.append(Edge(self.vertices[i], self.vertices[i+1]))
+        self.edges.append(Edge(self.vertices[0], self.vertices[-1]))
         # print(len(self.edges))
+
 
     def get_centroid(self):
         self.coords.append(self.coords[0])
@@ -77,6 +128,7 @@ class PolyObject:
         y = Cy / (6 * A)
 
         return [x, y]
+
 
     def rotate(self):
         matrix = [[math.cos(math.radians(15)), math.sin(math.radians(15))],
@@ -214,25 +266,33 @@ class Playground(Tk):
 
     def v_clip(self, A, B, X, Y):
         print(A, B, X, Y)
+        pair = FeaturePair(X, Y)
         while True:
-            if self.pair_type(X, Y) == "VV":
+            if pair.type() == "VV":
                 if self.clip_vertex():
                     continue
                 if self.clip_vertex():
                     continue
                 return
-            if self.pair_type(X, Y) == "VE":
+            if pair.type() == "VE":
                 if self.clip_vertex():
                     continue
                 if self.clip_edge():
                     continue
                 return
-            if self.pair_type(X, Y) == "EE":
+            if pair.type() == "EE":
                 if self.clip_edge():
                     continue
                 if self.clip_edge():
                     continue
                 return
+            if pair.type() == "EV":
+                pair.swap() # swap(X, Y)
+                # swap(A, B)
+                tmp = A
+                A = B
+                B = tmp
+
             if Y is None:
                 return None
 
