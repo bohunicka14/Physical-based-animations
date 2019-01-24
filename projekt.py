@@ -15,6 +15,10 @@ def multiply(m, array):
         array[i + 1] = result_y
     return array
 
+def transpose(m):
+    result = [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
+    return result
+
 class Feature():
 
     def mark(self):
@@ -265,28 +269,53 @@ class Playground(Tk):
         self.ex, self.ey = event.x, event.y
 
     def v_clip(self, A, B, X, Y):
-        print(A, B, X, Y)
+        # print(A, B, X, Y)
         pair = FeaturePair(X, Y)
+        Sn = {}
         while True:
             if pair.type() == "VV":
-                if self.clip_vertex():
+                Sn = {FeaturePair(Y, E) for E in B.edges: if E.v1 == Y or E.v2 == Y}
+                if self.clip_vertex(X, Y, Sn):
                     continue
-                if self.clip_vertex():
+                Sn = {FeaturePair(X, E) for E in A.edges: if E.v1 == X or E.v2 == X}
+                if self.clip_vertex(Y, X, Sn):
                     continue
-                return
-            if pair.type() == "VE":
-                if self.clip_vertex():
+                return [X.x - Y.x, X.y - Y.y]
+
+            elif pair.type() == "VE":
+                Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
+                if self.clip_vertex(X, Y, Sn):
                     continue
-                if self.clip_edge():
+                Sn = {FeaturePair(X, E) for E in A.edges: if E.v1 == X or E.v2 == X}
+                if self.clip_edge(Y, X, Sn):
                     continue
-                return
-            if pair.type() == "EE":
-                if self.clip_edge():
+                u = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
+
+                return [X.x - (Y.v1.x + ((transpose(u)[0] * (X.x - Y.v1.x)) / (transpose(u)[0] * u[0])) * u[0]),
+                        X.y - (Y.v1.y + ((transpose(u)[1] * (X.y - Y.v1.y)) / (transpose(u)[1] * u[1])) * u[1])]
+
+            elif pair.type() == "EE":
+                Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
+                if self.clip_edge(X, Y, Sn):
                     continue
-                if self.clip_edge():
+
+                Sn = {FeaturePair(X.v1, X), FeaturePair(X.v2, X)}
+                if self.clip_edge(Y, X, Sn):
                     continue
-                return
-            if pair.type() == "EV":
+
+                ux = [X.v2.x - X.v1.x, X.v2.y - X.v1.y]
+                uy = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
+                nx = []
+                ny = []
+
+                tmp1 = [X.v1.x + ((transpose(ny)[0] * (Y.v1.x - X.v1.x)) / (transpose(ny)[0] * ux[0])) * ux[0],
+                        X.v1.y + ((transpose(ny)[1] * (Y.v1.y - X.v1.y)) / (transpose(ny)[1] * ux[1])) * ux[1]]
+
+                tmp2 = [Y.v1.x + ((transpose(nx)[0] * (X.v1.x - Y.v1.x)) / (transpose(nx)[0] * uy[0])) * uy[0],
+                        Y.v1.y + ((transpose(nx)[1] * (X.v1.y - Y.v1.y)) / (transpose(nx)[1] * uy[1])) * uy[1]]
+                return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
+
+            elif pair.type() == "EV":
                 pair.swap() # swap(X, Y)
                 # swap(A, B)
                 tmp = A
@@ -296,8 +325,6 @@ class Playground(Tk):
             if Y is None:
                 return None
 
-    def pair_type(self, feature1, feature2):
-        pass
 
     def clip_vertex(self, V, N, Sn):
         # V - vrchol, N - cast, ktora bude updatovana, Sn - set of clipping feature pairs
