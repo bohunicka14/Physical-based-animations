@@ -305,8 +305,8 @@ class Playground(Tk):
 
                 ux = [X.v2.x - X.v1.x, X.v2.y - X.v1.y]
                 uy = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
-                nx = []
-                ny = []
+                nx = [ux[1], -ux[0]]
+                ny = [uy[1], -uy[0]]
 
                 tmp1 = [X.v1.x + ((transpose(ny)[0] * (Y.v1.x - X.v1.x)) / (transpose(ny)[0] * ux[0])) * ux[0],
                         X.v1.y + ((transpose(ny)[1] * (Y.v1.y - X.v1.y)) / (transpose(ny)[1] * ux[1])) * ux[1]]
