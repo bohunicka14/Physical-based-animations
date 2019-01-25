@@ -42,9 +42,16 @@ class Vertex(Feature):
         self.marked = marked
         self.voronoi_region = []
 
-    def update(self, x, y):
-        self.x = x
-        self.y = y
+    def draw(self, canvas):
+        self.canvas = canvas
+        self.id = self.canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r,
+                                fill='black')
+
+    def update(self):
+        self.canvas.itemconfig(self.id, fill='red')
+
+    def move(self, xx, yy):
+        self.canvas.move(self.id, xx, yy)
 
 class Edge(Feature):
 
@@ -53,6 +60,10 @@ class Edge(Feature):
         self.v2 = v2
         self.marked = marked
         self.voronoi_region = []
+        
+    def update(self, canvas):
+        self.canvas = canvas
+        self.canvas.create_line(self.v1.x, self.v1.y, self.v2.x, self.v2.y, fill='red')
 
     # def update(self, x1, y1, x2, y2):
     #     self.v1.update(x1, y1)
@@ -107,6 +118,7 @@ class PolyObject:
         self.edges = []
         self.vertices = []
         self.voronoi_regions = []
+        self.features = []
 
     def draw(self, coords, color):
         """ Coords - budem posielat suradnice bodov na vykreslenie poly-lineu
@@ -117,15 +129,9 @@ class PolyObject:
         else:
             self.id = self.canvas.create_polygon(*coords, fill=color, outline='black', width=1, tag=self.tag)
 
-    def set_active(self, state):
-        """ Zmena outline farby
-        """
-        if state == 1:
-            self.canvas.itemconfig(self.id, outline='red', width=3)
-            self.is_active = 1
-        else:
-            self.canvas.itemconfig(self.id, outline='black', width=1)
-            self.is_active = 0
+    def draw_vertices(self):
+        for vertex in self.vertices:
+            vertex.draw(self.canvas)
 
     def set_features(self):
         if len(self.vertices) == 0 and len(self.edges) == 0:
@@ -133,6 +139,7 @@ class PolyObject:
             for i in range(0, len(self.coords), 2):
                 # print(len(self.coords), self.coords[i], self.coords[i+1])
                 self.vertices.append(Vertex(self.coords[i], self.coords[i + 1]))
+            self.draw_vertices()
             for i in range(len(self.vertices) - 1):
                 self.edges.append(Edge(self.vertices[i], self.vertices[i + 1]))
             self.edges.append(Edge(self.vertices[0], self.vertices[-1]))
@@ -143,6 +150,7 @@ class PolyObject:
             for i in range(0, len(self.coords), 2):
                 self.vertices[j].update(self.coords[i], self.coords[i+1])
                 j += 1
+        self.features = self.vertices + self.edges
 
     def set_coords(self, coords):
         self.coords = coords
@@ -257,14 +265,14 @@ class Playground(Tk):
         coords_1 = polygons[0]
         coords_2 = polygons[1]
         self.p1 = PolyObject(self.playground, 100, 100, 'object1')
-        self.p1.draw(coords_1, 'white')
         # print('Suradnice bodov objektu p1: ', self.playground.coords(self.p1.id))
         self.p2 = PolyObject(self.playground, 400, 400, 'object2')
-        self.p2.draw(coords_2, 'navy')
         self.polygons_array.append(self.p1)
         self.polygons_array.append(self.p2)
         # print(self.polygons_array)
 
+        self.p1.draw(coords_1, 'white')
+        self.p2.draw(coords_2, 'white')
         self.p1.set_coords(self.playground.coords(self.p1.id))
         self.p2.set_coords(self.playground.coords(self.p2.id))
         print('coords   ', self.p1.coords)
@@ -303,11 +311,29 @@ class Playground(Tk):
     def drag(self, event):
         # if self.obj_tag == ('object' + str(self.obj_id)):
         self.playground.move(self.obj_id, event.x - self.ex, event.y - self.ey)
-        if self.p1.is_active:
-            self.p1.set_coords(self.playground.coords(self.p1.id))
-        elif self.p2.is_active:
-            self.p2.set_coords(self.playground.coords(self.p2.id))
+        if self.p1.tag == 'object' + str(self.obj_id):
+            for v in self.p1.vertices:
+                v.move(event.x - self.ex, event.y - self.ey)
+        elif self.p2.tag == 'object' + str(self.obj_id):
+            for v in self.p2.vertices:
+                v.move(event.x - self.ex, event.y - self.ey)
+
+        # if self.p1.is_active:
+            # self.p1.set_coords(self.playground.coords(self.p1.id))
+        # elif self.p2.is_active:
+            # self.p2.set_coords(self.playground.coords(self.p2.id))
+        self.start_v_clip()
         self.ex, self.ey = event.x, event.y
+        
+    def start_v_clip(self):
+        """
+        Ready to start the v_clip algorithm
+        """
+        # for feature in self.polygons_array[0].features:
+        #     # print('som tu', self.polygons_array[0], self.polygons_array[1],
+        #     #                    feature, self.polygons_array[1].features)
+        #     self.v_clip(self.polygons_array[0], self.polygons_array[1],
+        #                        feature, self.polygons_array[1].features[0])
 
     def v_clip(self, A, B, X, Y):
         # print(A, B, X, Y)
@@ -368,21 +394,52 @@ class Playground(Tk):
 
 
     def clip_vertex(self, V, N, Sn):
-        # V - vrchol, N - cast, ktora bude updatovana, Sn - set of clipping feature pairs
-        # return bool , cize true/false
+        """
+        :param V: A vertex
+        :param N: A feature to be updated
+        :param Sn: A set of clipping feature pairs
+        :return: Test if the feature N was updated (true/false)
+        """
         self.clear_all(Sn)
-        for x, y in Sn:
-            pass
+        for pair in Sn:
+            test = self.sign_distance(self.ds(V, self.voronoi_plane(pair[0], pair[1])))
+            if test > 0:
+                pair.f1.mark()
+            else:
+                pair.f2.mark()
         return self.update_clear(N, Sn)
 
+    def clear_all(self, Sn):
+        """
+        :param Sn: Array of features
+        :return: Array of updated features
+        """
+        for pair in Sn:
+            pair.f1.clear()
+            pair.f2.clear()
+        return Sn
+
     def update_clear(self, N, Sn):
-        # return bool - test if the feature N was updated
+        """
+        :param N: A feature to be updated
+        :param Sn: A set of clipping feature pairs
+        :return: Test if the feature N was updated (true/false)
+        """
         M = N                   # store old feature
-        for x, y in Sn:
-            pass
+        for pair in Sn:
+            if not pair.f1.marked:
+                N = pair.f1
+            if not pair.f2.marked:
+                N = pair.f2
         return N != M           # true if feature changed
 
     def clip_edge(self, E, N, Sn):
+        """
+        :param E: An edge
+        :param N: A feature to be updated
+        :param Sn: A set of clipping feature pairs
+        :return: Test if the feature N was updated (true/false)
+        """
         self.clear_all(Sn)
         for x, y in Sn:
             pass
