@@ -15,6 +15,17 @@ def multiply(m, array):
         array[i + 1] = result_y
     return array
 
+class VoronoiRegion:
+
+    def __init__(self, canvas, vertex, endpoint):
+        self.canvas = canvas
+        self.vertex = vertex
+        self.endpoint = endpoint
+
+    def draw(self):
+        self.canvas.create_line(self.vertex + self.endpoint, fill = 'red')
+
+
 class Feature():
 
     def mark(self):
@@ -29,6 +40,11 @@ class Vertex(Feature):
         self.x = x
         self.y = y
         self.marked = marked
+        self.voronoi_region = []
+
+    def update(self, x, y):
+        self.x = x
+        self.y = y
 
 class Edge(Feature):
 
@@ -36,6 +52,22 @@ class Edge(Feature):
         self.v1 = v1
         self.v2 = v2
         self.marked = marked
+        self.voronoi_region = []
+
+    # def update(self, x1, y1, x2, y2):
+    #     self.v1.update(x1, y1)
+    #     self.v2.update(x2, y2)
+
+    def get_directional_vector(self):
+        return [self.v2.x - self.v1.x, self.v2.y - self.v1.y]
+
+    def get_normal_vector(self):
+        directional = self.get_directional_vector()
+        return [directional[1], -directional[0]]
+
+    def get_inverse_normal_vector(self):
+        normal = self.get_normal_vector()
+        return [-normal[0], -normal[1]]
 
 class FeaturePair():
 
@@ -74,11 +106,12 @@ class PolyObject:
         self.is_active = 0
         self.edges = []
         self.vertices = []
+        self.voronoi_regions = []
 
     def draw(self, coords, color):
         """ Coords - budem posielat suradnice bodov na vykreslenie poly-lineu
         """
-        print(type(coords))
+        # print(type(coords))
         if self.is_active:
             self.id = self.canvas.create_polygon(*coords, fill=color, outline='red', width=3, tag=self.tag)
         else:
@@ -94,18 +127,26 @@ class PolyObject:
             self.canvas.itemconfig(self.id, outline='black', width=1)
             self.is_active = 0
 
+    def set_features(self):
+        if len(self.vertices) == 0 and len(self.edges) == 0:
+            ## init features
+            for i in range(0, len(self.coords), 2):
+                # print(len(self.coords), self.coords[i], self.coords[i+1])
+                self.vertices.append(Vertex(self.coords[i], self.coords[i + 1]))
+            for i in range(len(self.vertices) - 1):
+                self.edges.append(Edge(self.vertices[i], self.vertices[i + 1]))
+            self.edges.append(Edge(self.vertices[0], self.vertices[-1]))
+            # print(len(self.edges))
+        else:
+            ## update features according to new coords
+            j = 0
+            for i in range(0, len(self.coords), 2):
+                self.vertices[j].update(self.coords[i], self.coords[i+1])
+                j += 1
+
     def set_coords(self, coords):
         self.coords = coords
-        self.vertices = []
-        self.edges = []
-        for i in range(0, len(self.coords), 2):
-            # print(len(self.coords), self.coords[i], self.coords[i+1])
-            self.vertices.append(Vertex(self.coords[i], self.coords[i+1]))
-        for i in range(len(self.vertices) - 1):
-            self.edges.append(Edge(self.vertices[i], self.vertices[i+1]))
-        self.edges.append(Edge(self.vertices[0], self.vertices[-1]))
-        # print(len(self.edges))
-
+        self.set_features()
 
     def get_centroid(self):
         self.coords.append(self.coords[0])
@@ -262,6 +303,10 @@ class Playground(Tk):
     def drag(self, event):
         # if self.obj_tag == ('object' + str(self.obj_id)):
         self.playground.move(self.obj_id, event.x - self.ex, event.y - self.ey)
+        if self.p1.is_active:
+            self.p1.set_coords(self.playground.coords(self.p1.id))
+        elif self.p2.is_active:
+            self.p2.set_coords(self.playground.coords(self.p2.id))
         self.ex, self.ey = event.x, event.y
 
     def v_clip(self, A, B, X, Y):
@@ -270,10 +315,10 @@ class Playground(Tk):
         Sn = {}
         while True:
             if pair.type() == "VV":
-                Sn = {FeaturePair(Y, E) for E in B.edges: if E.v1 == Y or E.v2 == Y}
+                Sn = {FeaturePair(Y, E) for E in B.edges if E.v1 == Y or E.v2 == Y}
                 if self.clip_vertex(X, Y, Sn):
                     continue
-                Sn = {FeaturePair(X, E) for E in A.edges: if E.v1 == X or E.v2 == X}
+                Sn = {FeaturePair(X, E) for E in A.edges if E.v1 == X or E.v2 == X}
                 if self.clip_vertex(Y, X, Sn):
                     continue
                 return [X.x - Y.x, X.y - Y.y]
@@ -282,7 +327,7 @@ class Playground(Tk):
                 Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
                 if self.clip_vertex(X, Y, Sn):
                     continue
-                Sn = {FeaturePair(X, E) for E in A.edges: if E.v1 == X or E.v2 == X}
+                Sn = {FeaturePair(X, E) for E in A.edges if E.v1 == X or E.v2 == X}
                 if self.clip_edge(Y, X, Sn):
                     continue
                 u = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
