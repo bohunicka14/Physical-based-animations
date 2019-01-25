@@ -15,10 +15,6 @@ def multiply(m, array):
         array[i + 1] = result_y
     return array
 
-def transpose(m):
-    result = [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
-    return result
-
 class Feature():
 
     def mark(self):
@@ -291,8 +287,8 @@ class Playground(Tk):
                     continue
                 u = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
 
-                return [X.x - (Y.v1.x + ((transpose(u)[0] * (X.x - Y.v1.x)) / (transpose(u)[0] * u[0])) * u[0]),
-                        X.y - (Y.v1.y + ((transpose(u)[1] * (X.y - Y.v1.y)) / (transpose(u)[1] * u[1])) * u[1])]
+                return [X.x - (Y.v1.x + ((u[0] * (X.x - Y.v1.x)) / (u[0] * u[0])) * u[0]),
+                        X.y - (Y.v1.y + ((u[1] * (X.y - Y.v1.y)) / (u[1] * u[1])) * u[1])]
 
             elif pair.type() == "EE":
                 Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
@@ -308,11 +304,11 @@ class Playground(Tk):
                 nx = [ux[1], -ux[0]]
                 ny = [uy[1], -uy[0]]
 
-                tmp1 = [X.v1.x + ((transpose(ny)[0] * (Y.v1.x - X.v1.x)) / (transpose(ny)[0] * ux[0])) * ux[0],
-                        X.v1.y + ((transpose(ny)[1] * (Y.v1.y - X.v1.y)) / (transpose(ny)[1] * ux[1])) * ux[1]]
+                tmp1 = [X.v1.x + ((ny[0] * (Y.v1.x - X.v1.x)) / (ny[0] * ux[0])) * ux[0],
+                        X.v1.y + ((ny[1] * (Y.v1.y - X.v1.y)) / (ny[1] * ux[1])) * ux[1]]
 
-                tmp2 = [Y.v1.x + ((transpose(nx)[0] * (X.v1.x - Y.v1.x)) / (transpose(nx)[0] * uy[0])) * uy[0],
-                        Y.v1.y + ((transpose(nx)[1] * (X.v1.y - Y.v1.y)) / (transpose(nx)[1] * uy[1])) * uy[1]]
+                tmp2 = [Y.v1.x + ((nx[0] * (X.v1.x - Y.v1.x)) / (nx[0] * uy[0])) * uy[0],
+                        Y.v1.y + ((nx[1] * (X.v1.y - Y.v1.y)) / (nx[1] * uy[1])) * uy[1]]
                 return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
 
             elif pair.type() == "EV":
