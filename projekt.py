@@ -377,16 +377,30 @@ class Playground(Tk):
             # print(self.playground.coords(self.p1.id))
             self.obj_id = self.p1.id
             self.p1.rotate()
+            self.redraw_canvas(False)
+            self.p1.set_coords(self.playground.coords(self.p1.id))
+            for e in self.p1.edges:
+                e.draw_VR()
+
+            for e in self.p2.edges:
+                e.draw_VR()
+
         elif self.p2.is_active:
             # print(self.playground.coords(self.p2.id))
             self.obj_id = self.p2.id
             # self.p2.set_coords(rotated_points)
             self.p2.rotate()
+            self.redraw_canvas(False)
+            self.p2.set_coords(self.playground.coords(self.p2.id))
+            for e in self.p1.edges:
+                e.draw_VR()
+
+            for e in self.p2.edges:
+                e.draw_VR()
+
         else:
             messagebox.showwarning("Warning", "No object is selected!!!")
             return
-
-        self.redraw_canvas()
 
     def load_from_file(self, file):
         """ Naciatnie suradnic zo suboru
@@ -416,27 +430,28 @@ class Playground(Tk):
         self.p1.set_coords(self.playground.coords(self.p1.id))
         self.p2.set_coords(self.playground.coords(self.p2.id))
 
-        # # for v in self.p1.vertices:
-        # #     v.draw_VR()
-        #
-        # for e in self.p1.edges:
-        #     e.draw_VR()
-        #
-        # # for v in self.p2.vertices:
-        # #     v.draw_VR()
-        #
-        # for e in self.p2.edges:
-        #     e.draw_VR()
-
 
         # print('coords   ', self.p1.coords)
 
         # self.v_clip(self.p1, self.p2, None, None)
 
-    def redraw_canvas(self):
+    def redraw_canvas(self, draw_vr = True):
         self.playground.delete('all')
         self.p1.draw(self.p1.coords, 'white')
         self.p2.draw(self.p2.coords, 'navy')
+
+        if draw_vr:
+            for v in self.p1.vertices:
+                v.draw_VR()
+
+            for e in self.p1.edges:
+                e.draw_VR()
+
+            for v in self.p2.vertices:
+                v.draw_VR()
+
+            for e in self.p2.edges:
+                e.draw_VR()
 
 
     def click(self, event):
