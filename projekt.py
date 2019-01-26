@@ -113,6 +113,18 @@ class Vertex(Feature):
     def move(self, xx, yy):
         self.canvas.move(self.id, xx, yy)
 
+    def __eq__(self, v):
+        return self.x == v.x and self.y == v.y
+
+    def __add__(self, v):
+        return [self.x + v.x, self.y + v.y]
+
+    def __sub__(self, v):
+        return [self.x - v.x, self.y - v.y]
+
+    def __mul__(self, k):
+        return [self.x*k, self.y*k]
+
 
 class Edge(Feature):
 
@@ -152,6 +164,15 @@ class Edge(Feature):
         normal = self.get_normal_vector()
         return [-normal[0], -normal[1]]
 
+    def calculate_plain(self, v):
+        n = unit_vector(self.get_directional_vector())
+
+        if v == self.v2:
+            n = [-n[0], -n[1]]
+
+        c = n[0] * v.x + n[1] * v.y
+        return [n, -c]
+
     def create_voronoi_region(self):
         vector = self.get_normal_vector()
 
@@ -185,6 +206,10 @@ class Edge(Feature):
 
     def update(self):
         self.voronoi_region = self.create_voronoi_region()
+
+    def __mul__(self, k):
+        v = self.get_directional_vector()
+        return [v[0]*k, v[1]*k]
 
 
 class FeaturePair():
@@ -603,7 +628,12 @@ class Playground(Tk):
         return self.update_clear(N, Sn)
 
     def ds(self, v, p1, p2):
-        pass
+
+        if p1 == p2.v1:
+            p = p2.calculate_plain(p2.v1)
+        else:
+            p = p2.calculate_plain(p2.v2)
+        return p[0][0] * v.x + p[0][1] * v.y + p[1]
 
     def sign_distance(self, v):
         if v <= 0:
@@ -641,11 +671,22 @@ class Playground(Tk):
         :param Sn: A set of clipping feature pairs
         :return: Test if the feature N was updated (true/false)
         """
-        self.clear_all(Sn)
-        for x, y in Sn:
-            pass
+        Sn = self.clear_all(Sn)
+        for pair in Sn:
+            d1, d2 = self.ds(E.v1, pair.f1, pair.f2), self.ds(E.v2, pair.f1, pair.f2)
+            lam = d2 / (d1 - d2) if (d1 - d2) != 0 else 0
+            e = E.v1 * (1 - lam) + E.v2 * lam
+            u = E * self.sign_distance(d2)
+            if self.sign_distance(d1 * d2) > 0:
+                test = self.sign_distance(d1)
+            if self.sign_distance(d1 * d2) < 0:
+                v = [pair.f1.x - e[0], pair.f1.y - e[1]]
+                test = self.sign_distance(u[0] * v[0] + u[1] * v[1])
+            if test > 0:
+                pair.f1.mark()
+            else:
+                pair.f2.mark()
         return self.update_clear(N, Sn)
-
 
 if __name__ == '__main__':
     mw = Playground()
