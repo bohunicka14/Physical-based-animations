@@ -209,16 +209,11 @@ class Edge(Feature):
         self.voronoi_region = self.create_voronoi_region()
 
     def __eq__(self,e):
-        """
-        Input: Edge
-        Output: Bloolean
-        Function returns True if Edge is equivalent with input Edge
-        """
         return self.v1 == e.v1 and self.v2 == e.v2
 
-    def __eq__(self,e):
-        return self.v1 == e.v1 and self.v2 == e.v2
-
+    def __mul__(self, k):
+        v = self.get_directional_vector()
+        return [v[0]*k, v[1]*k]
 
 class FeaturePair():
 
