@@ -412,7 +412,7 @@ class Playground(Tk):
             self.redraw_canvas(False)
             self.p1.set_coords(self.playground.coords(self.p1.id))
             for e in self.p1.edges:
-                e.draw_VR()
+                e.draw_VR('green')
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -426,7 +426,7 @@ class Playground(Tk):
             self.redraw_canvas(False)
             self.p2.set_coords(self.playground.coords(self.p2.id))
             for e in self.p1.edges:
-                e.draw_VR()
+                e.draw_VR('green')
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -473,14 +473,14 @@ class Playground(Tk):
         self.p2.draw(self.p2.coords, 'navy')
 
         if draw_vr:
-            for v in self.p1.vertices:
-                v.draw_VR()
+            # for v in self.p1.vertices:
+            #     v.draw_VR()
 
             for e in self.p1.edges:
-                e.draw_VR()
+                e.draw_VR('green')
 
-            for v in self.p2.vertices:
-                v.draw_VR()
+            # for v in self.p2.vertices:
+            #     v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -516,17 +516,17 @@ class Playground(Tk):
             self.p1.set_coords(self.playground.coords(self.p1.id))
             # for e in self.p1.edges:
             #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            for v in self.p1.vertices:
-                v.draw_VR()
+            # for v in self.p1.vertices:
+            #     v.draw_VR()
 
             for e in self.p1.edges:
-                e.draw_VR()
+                e.draw_VR('green')
         elif self.p2.is_active:
             self.p2.set_coords(self.playground.coords(self.p2.id))
             # for e in self.p2.edges:
             #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            for v in self.p2.vertices:
-                v.draw_VR()
+            # for v in self.p2.vertices:
+            #     v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -583,10 +583,17 @@ class Playground(Tk):
                 Sn = {FeaturePair(self.features_1, E) for E in self.polygon_1.edges if E.v1 == self.features_1 or E.v2 == self.features_1}
                 if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
-                u = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
-
-                return [self.features_1.x - (self.features_2.v1.x + ((u[0] * (self.features_1.x - self.features_2.v1.x)) / (u[0] * u[0])) * u[0]),
-                        self.features_1.y - (self.features_2.v1.y + ((u[1] * (self.features_1.y - self.features_2.v1.y)) / (u[1] * u[1])) * u[1])]
+                # u = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
+                #
+                # return [self.features_1.x - (self.features_2.v1.x + ((u[0] * (self.features_1.x - self.features_2.v1.x)) / (u[0] * u[0])) * u[0]),
+                #         self.features_1.y - (self.features_2.v1.y + ((u[1] * (self.features_1.y - self.features_2.v1.y)) / (u[1] * u[1])) * u[1])]
+                u = self.features_2.get_directional_vector()
+                w = self.features_1 - self.features_2.v1
+                q = (u[0] * w[0] + u[1] * w[1]) / (
+                            u[0] * u[0] + u[1] * u[1])  # if (u[0] * u[0] + u[1] * u[1]) != 0 else 0
+                c = [u[0] * q, u[1] * q]
+                v = [self.features_2.v1.x + c[0], self.features_2.v1.y + c[1]]
+                return [self.features_1.x - v[0], self.features_1.y - v[1]]
 
             elif pair.type() == "EE":
                 Sn = {FeaturePair(self.features_2.v1, self.features_2), FeaturePair(self.features_2.v2, self.features_2)}
@@ -597,17 +604,36 @@ class Playground(Tk):
                 if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
 
-                ux = [self.features_1.v2.x - self.features_1.v1.x, self.features_1.v2.y - self.features_1.v1.y]
-                uy = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
-                nx = [ux[1], -ux[0]]
-                ny = [uy[1], -uy[0]]
+                # ux = [self.features_1.v2.x - self.features_1.v1.x, self.features_1.v2.y - self.features_1.v1.y]
+                # uy = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
+                # nx = [ux[1], -ux[0]]
+                # ny = [uy[1], -uy[0]]
+                #
+                # tmp1 = [self.features_1.v1.x + ((ny[0] * (self.features_2.v1.x - self.features_1.v1.x)) / (ny[0] * ux[0])) * ux[0],
+                #         self.features_1.v1.y + ((ny[1] * (self.features_2.v1.y - self.features_1.v1.y)) / (ny[1] * ux[1])) * ux[1]]
+                #
+                # tmp2 = [self.features_2.v1.x + ((nx[0] * (self.features_1.v1.x - self.features_2.v1.x)) / (nx[0] * uy[0])) * uy[0],
+                #         self.features_2.v1.y + ((nx[1] * (self.features_1.v1.y - self.features_2.v1.y)) / (nx[1] * uy[1])) * uy[1]]
+                # return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
 
-                tmp1 = [self.features_1.v1.x + ((ny[0] * (self.features_2.v1.x - self.features_1.v1.x)) / (ny[0] * ux[0])) * ux[0],
-                        self.features_1.v1.y + ((ny[1] * (self.features_2.v1.y - self.features_1.v1.y)) / (ny[1] * ux[1])) * ux[1]]
+                ux, uy = self.features_1.get_directional_vector(), self.features_2.get_directional_vector()
+                nx = [(uy[1] * (ux[0] * uy[1] - uy[0] * ux[1])), (ux[0] * uy[1] - uy[0] * ux[1]) * uy[0]]
+                ny = [(ux[1] * (uy[0] * ux[1] - ux[0] * uy[1])), (uy[0] * ux[1] - ux[0] * uy[1]) * ux[0]]
 
-                tmp2 = [self.features_2.v1.x + ((nx[0] * (self.features_1.v1.x - self.features_2.v1.x)) / (nx[0] * uy[0])) * uy[0],
-                        self.features_2.v1.y + ((nx[1] * (self.features_1.v1.y - self.features_2.v1.y)) / (nx[1] * uy[1])) * uy[1]]
-                return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
+                w = self.features_2.v1 - self.features_1.v1
+                q = (ny[0] * w[0] + ny[1] * w[1]) / (ny[0] * ux[0] + ny[1] * ux[1]) if (ny[0] * ux[0] + ny[1] * ux[
+                    1]) != 0 else 0
+                c = [ux[0] * q, ux[1] * q]
+                v = [self.features_1.v1.x + c[0], self.features_1.v1.y + c[0]]
+
+                w1 = self.features_1.v1 - self.features_2.v1
+                q1 = (nx[0] * w1[0] + nx[1] * w1[1]) / (nx[0] * uy[0] + nx[1] * uy[1]) if (nx[0] * uy[0] + nx[1] * uy[
+                    1]) != 0 else 0
+                c1 = [uy[0] * q1, uy[1] * q1]
+                v1 = [self.features_2.v1.x + c1[0], self.features_2.v1.y + c1[0]]
+
+                ##                        print([v[0] - v1[0], v[1] - v1[1]],'VYSL PRE EE', self.feat1, self.feat2)
+                return [v[0] - v1[0], v[1] - v1[1]]
 
             elif pair.type() == "EV":
                 # pair.swap()  # swap(X, Y)
