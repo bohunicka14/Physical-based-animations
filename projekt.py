@@ -385,6 +385,7 @@ class Playground(Tk):
             for e in self.p2.edges:
                 e.draw_VR()
 
+
         elif self.p2.is_active:
             # print(self.playground.coords(self.p2.id))
             self.obj_id = self.p2.id
@@ -592,14 +593,22 @@ class Playground(Tk):
         :param Sn: A set of clipping feature pairs
         :return: Test if the feature N was updated (true/false)
         """
-        self.clear_all(Sn)
+        Sn = self.clear_all(Sn)
         for pair in Sn:
-            test = self.sign_distance(self.ds(V, self.voronoi_plane(pair[0], pair[1])))
+            test = self.sign_distance(self.ds(V, pair.f1, pair.f2))
             if test > 0:
                 pair.f1.mark()
             else:
                 pair.f2.mark()
         return self.update_clear(N, Sn)
+
+    def ds(self, v, p1, p2):
+        pass
+
+    def sign_distance(self, v):
+        if v <= 0:
+            return -1
+        return 1
 
     def clear_all(self, Sn):
         """
