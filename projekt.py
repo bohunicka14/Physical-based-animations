@@ -554,8 +554,15 @@ class Playground(Tk):
         for feature in self.polygons_array[0].features:
             # print('som tu', self.polygons_array[0], self.polygons_array[1],
             #                    feature, self.polygons_array[1].features)
-            self.v_clip(self.polygons_array[0], self.polygons_array[1],
+            data = self.v_clip(self.polygons_array[0], self.polygons_array[1],
                                feature, self.polygons_array[1].features[0])
+            print('toto su data ', data)
+            vysledok = (data[0] ** 2 + data[1]**2) ** 0.5
+            print('toto je vysledok ', vysledok)
+            if type(self.features_1) == Vertex and type(self.features_2) == Vertex:
+                self.playground.create_line(self.features_1.x, self.features_1.y,
+                                            self.features_2.x, self.features_2.y, fill='yellow',
+                                            width=3)
 
 
     def v_clip(self, A, B, X, Y):
