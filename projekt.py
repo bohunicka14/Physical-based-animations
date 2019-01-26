@@ -15,9 +15,11 @@ def multiply(m, array):
         array[i + 1] = result_y
     return array
 
+
 def unit_vector(vector):
-    length = math.sqrt(vector[0]**2 + vector[1]**2)
+    length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
     return [vector[0] / length, vector[1] / length]
+
 
 def ray_line_segment_intersection(o, d, a, b):
     ## returns true if ray intersects with line segment
@@ -46,7 +48,6 @@ def ray_line_segment_intersection(o, d, a, b):
     partial_result1 = t2 >= 0 and t2 <= 1 and t1 >= 0
     partial_result2 = t22 >= 0 and t22 <= 1 and t12 >= 0
 
-
     return partial_result1 and partial_result2
 
 
@@ -72,9 +73,10 @@ class Feature():
     def clear(self):
         self.marked = False
 
+
 class Vertex(Feature):
 
-    def __init__(self, canvas, x, y, marked = False):
+    def __init__(self, canvas, x, y, marked=False):
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -88,7 +90,7 @@ class Vertex(Feature):
         self.y = y
         self.voronoi_region = [[self.x, self.y], [self.x, self.y]]
 
-    def draw_VR(self, color = 'blue'):
+    def draw_VR(self, color='blue'):
         if self.vr2 is not None and self.vr1 is not None:
             self.canvas.delete(self.vr1)
             self.canvas.delete(self.vr2)
@@ -101,11 +103,10 @@ class Vertex(Feature):
         self.canvas.move(self.vr1, x, y)
         self.canvas.move(self.vr2, x, y)
 
-
     def draw(self, canvas):
         self.canvas = canvas
-        self.id = self.canvas.create_oval(self.x-self.r, self.y-self.r, self.x+self.r, self.y+self.r,
-                                fill='black')
+        self.id = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r,
+                                          fill='black')
 
     def update_color(self):
         self.canvas.itemconfig(self.id, fill='red')
@@ -123,19 +124,19 @@ class Vertex(Feature):
         return [self.x - v.x, self.y - v.y]
 
     def __mul__(self, k):
-        return [self.x*k, self.y*k]
+        return [self.x * k, self.y * k]
 
 
 class Edge(Feature):
 
-    def __init__(self, v1, v2, polygon, marked = False):
+    def __init__(self, v1, v2, polygon, marked=False):
         self.v1 = v1
         self.v2 = v2
         self.polygon = polygon
         self.marked = marked
         self.voronoi_region = self.create_voronoi_region()
         self.vr1 = self.vr2 = None
-        
+
     def update_color(self):
         self.polygon.canvas.create_line(self.v1.x, self.v1.y, self.v2.x, self.v2.y, fill='red')
 
@@ -193,7 +194,7 @@ class Edge(Feature):
 
         return [[self.v1.x, self.v1.y, ax, ay], [self.v2.x, self.v2.y, bx, by]]
 
-    def draw_VR(self, color = 'blue'):
+    def draw_VR(self, color='blue'):
         if self.vr2 is not None and self.vr1 is not None:
             self.polygon.canvas.delete(self.vr1)
             self.polygon.canvas.delete(self.vr2)
@@ -207,9 +208,13 @@ class Edge(Feature):
     def update(self):
         self.voronoi_region = self.create_voronoi_region()
 
-    def __mul__(self, k):
-        v = self.get_directional_vector()
-        return [v[0]*k, v[1]*k]
+    def __eq__(self,e):
+        """
+        Input: Edge
+        Output: Bloolean
+        Function returns True if Edge is equivalent with input Edge
+        """
+        return self.v1 == e.v1 and self.v2 == e.v2
 
 
 class FeaturePair():
@@ -238,7 +243,6 @@ class FeaturePair():
         self.f2 = tmp
 
 
-
 class PolyObject:
     ### !!!!!!! Pridat pole alebo zoznam so zapamatanymi hranami, ktore spajaju vrcholy a pamatat si vrcholy
     def __init__(self, canvas, x, y, tag):
@@ -261,22 +265,21 @@ class PolyObject:
         else:
             self.id = self.canvas.create_polygon(*coords, fill=color, outline='black', width=1, tag=self.tag)
 
-
     def point_in_polygon(self, x, y):
         n = len(self.vertices)
         v = False
 
         b1x, b1y = self.vertices[0].x, self.vertices[0].y
-        for i in range(n+1):
-            b2x, b2y = self.vertices[i%n].x, self.vertices[i%n].y
+        for i in range(n + 1):
+            b2x, b2y = self.vertices[i % n].x, self.vertices[i % n].y
             if y > min(b1y, b2y):
                 if y <= max(b1y, b2y):
                     if x <= max(b1x, b2x):
                         if b1y != b2y:
-                            xin = (y-b1y)*(b2x-b1x)/(b2y-b1y) + b1x
+                            xin = (y - b1y) * (b2x - b1x) / (b2y - b1y) + b1x
                         if b1x == b2x or x <= xin:
                             v = not v
-            b1x,b1y = b2x,b2y
+            b1x, b1y = b2x, b2y
         return v
 
     def set_active(self, state):
@@ -292,7 +295,6 @@ class PolyObject:
     def draw_vertices(self):
         for vertex in self.vertices:
             vertex.draw(self.canvas)
-
 
     def set_features(self):
         if len(self.vertices) == 0 and len(self.edges) == 0:
@@ -310,7 +312,7 @@ class PolyObject:
             ## update features according to new coords
             j = 0
             for i in range(0, len(self.coords), 2):
-                self.vertices[j].update(self.coords[i], self.coords[i+1])
+                self.vertices[j].update(self.coords[i], self.coords[i + 1])
                 j += 1
 
             for e in self.edges:
@@ -332,9 +334,9 @@ class PolyObject:
         Cx = Cy = 0
         for i in range(0, len(self.coords) - 2, 2):
             Cx += (self.coords[i] + self.coords[i + 2]) * (
-                        self.coords[i] * self.coords[i + 3] - self.coords[i + 2] * self.coords[i + 1])
+                    self.coords[i] * self.coords[i + 3] - self.coords[i + 2] * self.coords[i + 1])
             Cy += (self.coords[i + 1] + self.coords[i + 3]) * (
-                        self.coords[i] * self.coords[i + 3] - self.coords[i + 2] * self.coords[i + 1])
+                    self.coords[i] * self.coords[i + 3] - self.coords[i + 2] * self.coords[i + 1])
 
         self.coords.pop()
         self.coords.pop()
@@ -342,7 +344,6 @@ class PolyObject:
         y = Cy / (6 * A)
 
         return [x, y]
-
 
     def rotate(self):
         matrix = [[math.cos(math.radians(15)), math.sin(math.radians(15))],
@@ -371,6 +372,14 @@ class PolyObject:
         # self.y = yy - self.y
         # self.coords = multiply(matrix, self.coords)
         self.canvas.move(self.id, xx, yy)
+
+    def __eq__(self,e):
+        """
+        Input: Edge
+        Output: Bloolean
+        Function returns True if Edge is equivalent with input Edge
+        """
+        return self.v1 == e.v1 and self.v2 == e.v2
 
 
 class Playground(Tk):
@@ -456,12 +465,11 @@ class Playground(Tk):
         self.p1.set_coords(self.playground.coords(self.p1.id))
         self.p2.set_coords(self.playground.coords(self.p2.id))
 
-
         # print('coords   ', self.p1.coords)
 
         # self.v_clip(self.p1, self.p2, None, None)
 
-    def redraw_canvas(self, draw_vr = True):
+    def redraw_canvas(self, draw_vr=True):
         self.playground.delete('all')
         self.p1.draw(self.p1.coords, 'white')
         self.p2.draw(self.p2.coords, 'navy')
@@ -478,7 +486,6 @@ class Playground(Tk):
 
             for e in self.p2.edges:
                 e.draw_VR()
-
 
     def click(self, event):
         self.obj_id = event.widget.find_closest(event.x, event.y)[0]
@@ -534,82 +541,83 @@ class Playground(Tk):
                 v.move(event.x - self.ex, event.y - self.ey)
 
         # if self.p1.is_active:
-            # self.p1.set_coords(self.playground.coords(self.p1.id))
+        # self.p1.set_coords(self.playground.coords(self.p1.id))
         # elif self.p2.is_active:
-            # self.p2.set_coords(self.playground.coords(self.p2.id))
+        # self.p2.set_coords(self.playground.coords(self.p2.id))
         self.ex, self.ey = event.x, event.y
 
         self.start_v_clip()
 
-        
     def start_v_clip(self):
         """
         Ready to start the v_clip algorithm
         """
-        # for feature in self.polygons_array[0].features:
-        #     # print('som tu', self.polygons_array[0], self.polygons_array[1],
-        #     #                    feature, self.polygons_array[1].features)
-        #     self.v_clip(self.polygons_array[0], self.polygons_array[1],
-        #                        feature, self.polygons_array[1].features[0])
-
+        for feature in self.polygons_array[0].features:
+            # print('som tu', self.polygons_array[0], self.polygons_array[1],
+            #                    feature, self.polygons_array[1].features)
+            self.v_clip(self.polygons_array[0], self.polygons_array[1],
+                               feature, self.polygons_array[1].features[0])
 
     def v_clip(self, A, B, X, Y):
         # print(A, B, X, Y)
-        pair = FeaturePair(X, Y)
+        self.polygon_1 = A
+        self.polygon_2 = B
+        self.features_1 = X
+        self.features_2 = Y
+        pair = FeaturePair(self.features_1, self.features_2)
         Sn = {}
         while True:
             if pair.type() == "VV":
-                Sn = {FeaturePair(Y, E) for E in B.edges if E.v1 == Y or E.v2 == Y}
-                if self.clip_vertex(X, Y, Sn):
+                Sn = {FeaturePair(self.features_2, E) for E in self.polygon_2.edges if E.v1 == self.features_2 or E.v2 == self.features_2}
+                if self.clip_vertex(self.features_1, self.features_2, Sn):
                     continue
-                Sn = {FeaturePair(X, E) for E in A.edges if E.v1 == X or E.v2 == X}
-                if self.clip_vertex(Y, X, Sn):
+                Sn = {FeaturePair(self.features_1, E) for E in self.polygon_1.edges if E.v1 == self.features_1 or E.v2 == self.features_1}
+                if self.clip_vertex(self.features_2, self.features_1, Sn):
                     continue
-                return [X.x - Y.x, X.y - Y.y]
+                return [self.features_1.x - self.features_2.x, self.features_1.y - self.features_2.y]
 
             elif pair.type() == "VE":
-                Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
-                if self.clip_vertex(X, Y, Sn):
+                Sn = {FeaturePair(self.features_2.v1, self.features_2), FeaturePair(self.features_2.v2, self.features_2)}
+                if self.clip_vertex(self.features_1, self.features_2, Sn):
                     continue
-                Sn = {FeaturePair(X, E) for E in A.edges if E.v1 == X or E.v2 == X}
-                if self.clip_edge(Y, X, Sn):
+                Sn = {FeaturePair(self.features_1, E) for E in self.polygon_1.edges if E.v1 == self.features_1 or E.v2 == self.features_1}
+                if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
-                u = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
+                u = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
 
-                return [X.x - (Y.v1.x + ((u[0] * (X.x - Y.v1.x)) / (u[0] * u[0])) * u[0]),
-                        X.y - (Y.v1.y + ((u[1] * (X.y - Y.v1.y)) / (u[1] * u[1])) * u[1])]
+                return [self.features_1.x - (self.features_2.v1.x + ((u[0] * (self.features_1.x - self.features_2.v1.x)) / (u[0] * u[0])) * u[0]),
+                        self.features_1.y - (self.features_2.v1.y + ((u[1] * (self.features_1.y - self.features_2.v1.y)) / (u[1] * u[1])) * u[1])]
 
             elif pair.type() == "EE":
-                Sn = {FeaturePair(Y.v1, Y), FeaturePair(Y.v2, Y)}
-                if self.clip_edge(X, Y, Sn):
+                Sn = {FeaturePair(self.features_2.v1, self.features_2), FeaturePair(self.features_2.v2, self.features_2)}
+                if self.clip_edge(self.features_1, self.features_2, Sn):
                     continue
 
-                Sn = {FeaturePair(X.v1, X), FeaturePair(X.v2, X)}
-                if self.clip_edge(Y, X, Sn):
+                Sn = {FeaturePair(self.features_1.v1, self.features_1), FeaturePair(self.features_1.v2, self.features_1)}
+                if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
 
-                ux = [X.v2.x - X.v1.x, X.v2.y - X.v1.y]
-                uy = [Y.v2.x - Y.v1.x, Y.v2.y - Y.v1.y]
+                ux = [self.features_1.v2.x - self.features_1.v1.x, self.features_1.v2.y - self.features_1.v1.y]
+                uy = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
                 nx = [ux[1], -ux[0]]
                 ny = [uy[1], -uy[0]]
 
-                tmp1 = [X.v1.x + ((ny[0] * (Y.v1.x - X.v1.x)) / (ny[0] * ux[0])) * ux[0],
-                        X.v1.y + ((ny[1] * (Y.v1.y - X.v1.y)) / (ny[1] * ux[1])) * ux[1]]
+                tmp1 = [self.features_1.v1.x + ((ny[0] * (self.features_2.v1.x - self.features_1.v1.x)) / (ny[0] * ux[0])) * ux[0],
+                        self.features_1.v1.y + ((ny[1] * (self.features_2.v1.y - self.features_1.v1.y)) / (ny[1] * ux[1])) * ux[1]]
 
-                tmp2 = [Y.v1.x + ((nx[0] * (X.v1.x - Y.v1.x)) / (nx[0] * uy[0])) * uy[0],
-                        Y.v1.y + ((nx[1] * (X.v1.y - Y.v1.y)) / (nx[1] * uy[1])) * uy[1]]
+                tmp2 = [self.features_2.v1.x + ((nx[0] * (self.features_1.v1.x - self.features_2.v1.x)) / (nx[0] * uy[0])) * uy[0],
+                        self.features_2.v1.y + ((nx[1] * (self.features_1.v1.y - self.features_2.v1.y)) / (nx[1] * uy[1])) * uy[1]]
                 return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
 
             elif pair.type() == "EV":
-                pair.swap() # swap(X, Y)
+                pair.swap()  # swap(X, Y)
                 # swap(A, B)
-                tmp = A
-                A = B
-                B = tmp
+                tmp = self.polygon_1
+                self.polygon_1 = self.polygon_2
+                self.polygon_2 = tmp
 
-            if Y is None:
+            if self.features_2 is None:
                 return None
-
 
     def clip_vertex(self, V, N, Sn):
         """
@@ -656,13 +664,33 @@ class Playground(Tk):
         :param Sn: A set of clipping feature pairs
         :return: Test if the feature N was updated (true/false)
         """
-        M = N                   # store old feature
+        M = N  # store old feature
         for pair in Sn:
             if not pair.f1.marked:
+                self.update_feature(N, pair.f1)
                 N = pair.f1
+                break
             if not pair.f2.marked:
+                self.update_feature(N, pair.f2)
                 N = pair.f2
-        return N != M           # true if feature changed
+                break
+        if type(M) != type(N):
+            return True
+        return N != M  # true if feature changed
+
+    def update_feature(self, f, value):
+        """
+        Input: Vertex/Edge, Vertex/Edge
+        Output:
+        Function updates the feature f to new feature value
+        """
+        try:
+            if self.features_1 == f:
+                self.features_1 = value
+            else:
+                self.features_2 = value
+        except AttributeError:
+            self.features_2 = value
 
     def clip_edge(self, E, N, Sn):
         """
@@ -687,6 +715,7 @@ class Playground(Tk):
             else:
                 pair.f2.mark()
         return self.update_clear(N, Sn)
+
 
 if __name__ == '__main__':
     mw = Playground()
