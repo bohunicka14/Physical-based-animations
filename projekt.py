@@ -211,6 +211,9 @@ class Edge(Feature):
         v = self.get_directional_vector()
         return [v[0]*k, v[1]*k]
 
+    def __eq__(self,e):
+        return self.v1 == e.v1 and self.v2 == e.v2
+
 
 class FeaturePair():
 
@@ -546,11 +549,11 @@ class Playground(Tk):
         """
         Ready to start the v_clip algorithm
         """
-        # for feature in self.polygons_array[0].features:
-        #     # print('som tu', self.polygons_array[0], self.polygons_array[1],
-        #     #                    feature, self.polygons_array[1].features)
-        #     self.v_clip(self.polygons_array[0], self.polygons_array[1],
-        #                        feature, self.polygons_array[1].features[0])
+        for feature in self.polygons_array[0].features:
+            # print('som tu', self.polygons_array[0], self.polygons_array[1],
+            #                    feature, self.polygons_array[1].features)
+            self.v_clip(self.polygons_array[0], self.polygons_array[1],
+                               feature, self.polygons_array[1].features[0])
 
 
     def v_clip(self, A, B, X, Y):
@@ -662,7 +665,8 @@ class Playground(Tk):
                 N = pair.f1
             if not pair.f2.marked:
                 N = pair.f2
-        return N != M           # true if feature changed
+
+        return type(N) != type(M)           # true if feature changed
 
     def clip_edge(self, E, N, Sn):
         """
