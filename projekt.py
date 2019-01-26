@@ -564,10 +564,11 @@ class Playground(Tk):
         self.polygon_2 = B
         self.features_1 = X
         self.features_2 = Y
-        pair = FeaturePair(self.features_1, self.features_2)
         Sn = {}
         while True:
+            pair = FeaturePair(self.features_1, self.features_2)
             if pair.type() == "VV":
+                print(type(self.features_1))
                 Sn = {FeaturePair(self.features_2, E) for E in self.polygon_2.edges if E.v1 == self.features_2 or E.v2 == self.features_2}
                 if self.clip_vertex(self.features_1, self.features_2, Sn):
                     continue
