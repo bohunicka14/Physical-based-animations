@@ -568,7 +568,6 @@ class Playground(Tk):
         while True:
             pair = FeaturePair(self.features_1, self.features_2)
             if pair.type() == "VV":
-                print(type(self.features_1))
                 Sn = {FeaturePair(self.features_2, E) for E in self.polygon_2.edges if E.v1 == self.features_2 or E.v2 == self.features_2}
                 if self.clip_vertex(self.features_1, self.features_2, Sn):
                     continue
@@ -611,7 +610,8 @@ class Playground(Tk):
                 return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
 
             elif pair.type() == "EV":
-                pair.swap()  # swap(X, Y)
+                # pair.swap()  # swap(X, Y)
+                self.features_1, self.features_2 = self.features_2, self.features_1
                 # swap(A, B)
                 tmp = self.polygon_1
                 self.polygon_1 = self.polygon_2
