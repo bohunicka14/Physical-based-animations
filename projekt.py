@@ -386,6 +386,8 @@ class Playground(Tk):
         main = Frame(self, bg='red', width=1000)
         main.pack()
 
+        self.id_segment = None
+
         self.labelframe = LabelFrame(main, text="Rotation", width=200)
         self.labelframe.pack(side=LEFT, fill=BOTH)
 
@@ -402,6 +404,8 @@ class Playground(Tk):
         self.playground.bind("<ButtonPress-1>", self.click)
         self.playground.bind("<B1-Motion>", self.drag)
         self.playground.bind("<ButtonRelease-1>", self.drop)
+
+
 
     def rotate_object(self):
 
@@ -543,26 +547,32 @@ class Playground(Tk):
         # elif self.p2.is_active:
         # self.p2.set_coords(self.playground.coords(self.p2.id))
         self.ex, self.ey = event.x, event.y
-
+        # self.redraw_canvas()
+        self.start_v_clip()
         self.start_v_clip()
 
     def start_v_clip(self):
         """
-        Ready to start the v_clip algorithm
+            Ready to start the v_clip algorithm
         """
-
         for feature in self.polygons_array[0].features:
             # print('som tu', self.polygons_array[0], self.polygons_array[1],
             #                    feature, self.polygons_array[1].features)
+
             data = self.v_clip(self.polygons_array[0], self.polygons_array[1],
-                               feature, self.polygons_array[1].features[0])
-            print('toto su data ', data)
-            vysledok = (data[0] ** 2 + data[1]**2) ** 0.5
-            print('toto je vysledok ', vysledok)
+                                         feature, self.polygons_array[1].features[0])
+            # print('toto su data ', data)
+            # vysledok = (data[0] ** 2 + data[1] ** 2) ** 0.5
+            # print('toto je vysledok ', vysledok)
+            if self.id_segment is not None:
+                self.playground.delete(self.id_segment)
             if type(self.features_1) == Vertex and type(self.features_2) == Vertex:
-                self.playground.create_line(self.features_1.x, self.features_1.y,
-                                            self.features_2.x, self.features_2.y, fill='yellow',
+
+                self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
+                                            self.features_2.x, self.features_2.y, fill='orange',
                                             width=3)
+            if type(self.features_1) == Vertex and type(self.features_2) == Edge:
+                pass
 
 
     def v_clip(self, A, B, X, Y):
