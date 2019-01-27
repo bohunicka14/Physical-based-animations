@@ -376,6 +376,8 @@ class Playground(Tk):
         main.pack()
 
         self.id_segment = None
+        self.highlighted_feature1 = None
+        self.highlighted_feature2 = None
 
         self.labelframe = LabelFrame(main, text="Rotation", width=200)
         self.labelframe.pack(side=LEFT, fill=BOTH)
@@ -538,7 +540,6 @@ class Playground(Tk):
         self.ex, self.ey = event.x, event.y
         # self.redraw_canvas()
         self.start_v_clip()
-        self.start_v_clip()
 
     def start_v_clip(self):
         """
@@ -550,33 +551,40 @@ class Playground(Tk):
 
             data = self.v_clip(self.polygons_array[0], self.polygons_array[1],
                                          feature, self.polygons_array[1].features[0])
-            # print('toto su data ', data)
-            # vysledok = (data[0] ** 2 + data[1] ** 2) ** 0.5
-            # print('toto je vysledok ', vysledok)
 
             if self.id_segment is not None:
                 self.playground.delete(self.id_segment)
+            if self.highlighted_feature1 is not None:
+                self.playground.delete(self.highlighted_feature1)
+            if self.highlighted_feature2 is not None:
+                self.playground.delete(self.highlighted_feature2)
+
             if type(self.features_1) == Vertex and type(self.features_2) == Vertex:
 
                 self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
                                             self.features_2.x, self.features_2.y, fill='orange',
                                             width=3)
-                # self.features_1.draw_VR('yellow', True)
-                # self.features_2.draw_VR('black', True)
+                self.highlighted_feature1 = self.playground.create_oval(self.features_1.x - 5, self.features_1.y - 5,
+                                                                        self.features_1.x + 5, self.features_1.y + 5,
+                                                                        fill='yellow')
+
+                self.highlighted_feature2 = self.playground.create_oval(self.features_2.x - 5, self.features_2.y - 5,
+                                                                        self.features_2.x + 5, self.features_2.y + 5,
+                                                                        fill='yellow')
+
             if type(self.features_1) == Vertex and type(self.features_2) == Edge:
-                # vec = self.features_2.get_directional_vector()
-                # l2 = vec[0]**2 + vec[1]**2
-                # dot1 = [self.features_1.x - self.features_2.v1.x, self.features_1.y - self.features_2.v1.x]
-                # dot2 = vec
-                # dot = dot1[0]*dot1[1] +dot2[0]*dot2[1]
-                # t = max(0, min(1, dot / l2))
-                # projection = [self.features_2.v1.x + t * vec[0], self.features_2.v1.y + t * vec[1]]
-
-
                 proj = projection(self.features_2.v2, self.features_2.v1, self.features_1)
                 self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
                                                               proj[0], proj[1], fill='orange',
                                                               width=3)
+
+                self.highlighted_feature1 = self.playground.create_oval(self.features_1.x - 5, self.features_1.y - 5,
+                                                                        self.features_1.x + 5, self.features_1.y + 5,
+                                                                        fill='yellow')
+
+                self.highlighted_feature2 = self.playground.create_line(self.features_2.v1.x, self.features_2.v1.y,
+                                                                        self.features_2.v2.x, self.features_2.v2.y,
+                                                                        fill='yellow', width = 3)
 
                 # self.features_1.draw_VR('yellow', True)
                 # self.features_2.draw_VR('black', True)
@@ -584,6 +592,14 @@ class Playground(Tk):
                 mp1 = mid_point(self.features_1.v1, self.features_1.v2)
                 mp2 = mid_point(self.features_2.v1, self.features_2.v2)
                 self.id_segment = self.playground.create_line(mp1, mp2, fill='orange', width=3)
+
+                self.highlighted_feature1 = self.playground.create_line(self.features_1.v1.x, self.features_1.v1.y,
+                                                                        self.features_1.v2.x, self.features_1.v2.y,
+                                                                        fill='yellow', width=3)
+
+                self.highlighted_feature2 = self.playground.create_line(self.features_2.v1.x, self.features_2.v1.y,
+                                                                        self.features_2.v2.x, self.features_2.v2.y,
+                                                                        fill='yellow', width=3)
 
 
     def v_clip(self, A, B, X, Y):
