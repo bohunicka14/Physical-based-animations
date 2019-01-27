@@ -20,50 +20,23 @@ def unit_vector(vector):
     length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
     return [vector[0] / length, vector[1] / length]
 
+def projection(A, B, C):
+    x1 = A.x
+    y1 = A.y
+    x2 = B.x
+    y2 = B.y
+    x3 = C.x
+    y3 = C.y
 
-def ray_line_segment_intersection(o, d, a, b):
-    ## returns true if ray intersects with line segment
-    ## o - point of ray
-    ## d - dir vector of ray
-    ## a,b - line segment points
-    ortho1 = [-d[1], d[0]]
-    ortho2 = [d[1], -d[0]]
-    a_to_o = [o[0] - a[0], o[1] - a[1]]
-    a_to_b = [b[0] - a[0], b[1] - a[1]]
+    px = x2 - x1
+    py = y2 - y1
+    dAB = px * px + py * py
 
-    denom1 = a_to_b[0] * ortho1[0] + a_to_b[1] * ortho1[1]
-    if denom1 == 0:
-        return False
+    u = ((x3 - x1) * px + (y3 - y1) * py) / dAB
 
-    denom2 = a_to_b[0] * ortho2[0] + a_to_b[1] * ortho2[1]
-    if denom2 == 0:
-        return False
-
-    t1 = abs(a_to_b[0] * a_to_o[1] - a_to_o[0] * a_to_b[1]) / denom1
-    t2 = (a_to_o[0] * ortho1[0] + a_to_o[1] * ortho1[1]) / denom1
-
-    t12 = abs(a_to_b[0] * a_to_o[1] - a_to_o[0] * a_to_b[1]) / denom2
-    t22 = (a_to_o[0] * ortho2[0] + a_to_o[1] * ortho1[1]) / denom2
-
-    partial_result1 = t2 >= 0 and t2 <= 1 and t1 >= 0
-    partial_result2 = t22 >= 0 and t22 <= 1 and t12 >= 0
-
-    return partial_result1 and partial_result2
-
-
-# class VoronoiRegion:
-#
-#     def __init__(self, canvas, vertex1, endpoint1, vertex2, endpoint2):
-#         self.canvas = canvas
-#         self.vertex1 = vertex1
-#         self.endpoint1 = endpoint1
-#         self.vertex2 = vertex2
-#         self.endpoint2 = endpoint2
-#
-#     def draw(self):
-#         self.canvas.create_line(self.vertex1 + self.endpoint1, fill = 'red')
-#         self.canvas.create_line(self.vertex2 + self.endpoint2, fill = 'red')
-
+    x = x1 + u * px
+    y = y1 + u * py
+    return [x, y]
 
 class Feature():
 
@@ -90,14 +63,20 @@ class Vertex(Feature):
         self.y = y
         self.voronoi_region = [[self.x, self.y], [self.x, self.y]]
 
-    def draw_VR(self, color='blue'):
+    def draw_VR(self, color='blue', bold = False):
         if self.vr2 is not None and self.vr1 is not None:
             self.canvas.delete(self.vr1)
             self.canvas.delete(self.vr2)
         if len(self.voronoi_region[0]) == 4:
-            self.vr1 = self.canvas.create_line(self.voronoi_region[0], fill=color)
+            if bold:
+                self.vr1 = self.canvas.create_line(self.voronoi_region[0], fill=color, width=3)
+            else:
+                self.vr1 = self.canvas.create_line(self.voronoi_region[0], fill=color)
         if len(self.voronoi_region[1]) == 4:
-            self.vr2 = self.canvas.create_line(self.voronoi_region[1], fill=color)
+            if bold:
+                self.vr2 = self.canvas.create_line(self.voronoi_region[1], fill=color, width=3)
+            else:
+                self.vr2 = self.canvas.create_line(self.voronoi_region[1], fill=color)
 
     def move_vr(self, x, y):
         self.canvas.move(self.vr1, x, y)
@@ -194,12 +173,17 @@ class Edge(Feature):
 
         return [[self.v1.x, self.v1.y, ax, ay], [self.v2.x, self.v2.y, bx, by]]
 
-    def draw_VR(self, color='blue'):
+    def draw_VR(self, color='blue', bold = False):
         if self.vr2 is not None and self.vr1 is not None:
             self.polygon.canvas.delete(self.vr1)
             self.polygon.canvas.delete(self.vr2)
-        self.vr1 = self.polygon.canvas.create_line(self.voronoi_region[0], fill=color)
-        self.vr2 = self.polygon.canvas.create_line(self.voronoi_region[1], fill=color)
+
+        if bold:
+            self.vr1 = self.polygon.canvas.create_line(self.voronoi_region[0], fill=color, width=3)
+            self.vr2 = self.polygon.canvas.create_line(self.voronoi_region[1], fill=color, width=3)
+        else:
+            self.vr1 = self.polygon.canvas.create_line(self.voronoi_region[0], fill=color)
+            self.vr2 = self.polygon.canvas.create_line(self.voronoi_region[1], fill=color)
 
     def move_vr(self, x, y):
         self.polygon.canvas.move(self.vr1, x, y)
@@ -571,8 +555,22 @@ class Playground(Tk):
                 self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
                                             self.features_2.x, self.features_2.y, fill='orange',
                                             width=3)
+                # self.features_1.draw_VR('yellow', True)
+                # self.features_2.draw_VR('black', True)
             if type(self.features_1) == Vertex and type(self.features_2) == Edge:
-                pass
+                # vec = self.features_2.get_directional_vector()
+                # l2 = vec[0]**2 + vec[1]**2
+                # dot1 = [self.features_1.x - self.features_2.v1.x, self.features_1.y - self.features_2.v1.x]
+                # dot2 = vec
+                # dot = dot1[0]*dot1[1] +dot2[0]*dot2[1]
+                # t = max(0, min(1, dot / l2))
+                # projection = [self.features_2.v1.x + t * vec[0], self.features_2.v1.y + t * vec[1]]
+
+
+                proj = projection(self.features_2.v2, self.features_2.v1, self.features_1)
+                self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
+                                                              proj[0], proj[1], fill='orange',
+                                                              width=3)
 
 
     def v_clip(self, A, B, X, Y):
