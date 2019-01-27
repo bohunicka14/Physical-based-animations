@@ -38,6 +38,11 @@ def projection(A, B, C):
     y = y1 + u * py
     return [x, y]
 
+def mid_point(v1, v2):
+    v = [v2.x - v1.x, v2.y - v1.y]
+    v[0], v[1] = v[0]/2, v[1]/2
+    return [ v[0] + v1.x, v[1] + v1.y ]
+
 class Feature():
 
     def mark(self):
@@ -461,14 +466,14 @@ class Playground(Tk):
         self.p2.draw(self.p2.coords, 'navy')
 
         if draw_vr:
-            # for v in self.p1.vertices:
-            #     v.draw_VR()
+            for v in self.p1.vertices:
+                v.draw_VR()
 
             for e in self.p1.edges:
                 e.draw_VR('green')
 
-            # for v in self.p2.vertices:
-            #     v.draw_VR()
+            for v in self.p2.vertices:
+                v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -504,8 +509,8 @@ class Playground(Tk):
             self.p1.set_coords(self.playground.coords(self.p1.id))
             # for e in self.p1.edges:
             #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            # for v in self.p1.vertices:
-            #     v.draw_VR()
+            for v in self.p1.vertices:
+                v.draw_VR()
 
             for e in self.p1.edges:
                 e.draw_VR('green')
@@ -513,8 +518,8 @@ class Playground(Tk):
             self.p2.set_coords(self.playground.coords(self.p2.id))
             # for e in self.p2.edges:
             #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            # for v in self.p2.vertices:
-            #     v.draw_VR()
+            for v in self.p2.vertices:
+                v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -548,6 +553,7 @@ class Playground(Tk):
             # print('toto su data ', data)
             # vysledok = (data[0] ** 2 + data[1] ** 2) ** 0.5
             # print('toto je vysledok ', vysledok)
+
             if self.id_segment is not None:
                 self.playground.delete(self.id_segment)
             if type(self.features_1) == Vertex and type(self.features_2) == Vertex:
@@ -571,6 +577,13 @@ class Playground(Tk):
                 self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
                                                               proj[0], proj[1], fill='orange',
                                                               width=3)
+
+                # self.features_1.draw_VR('yellow', True)
+                # self.features_2.draw_VR('black', True)
+            if type(self.features_1) == Edge and type(self.features_2) == Edge:
+                mp1 = mid_point(self.features_1.v1, self.features_1.v2)
+                mp2 = mid_point(self.features_2.v1, self.features_2.v2)
+                self.id_segment = self.playground.create_line(mp1, mp2, fill='orange', width=3)
 
 
     def v_clip(self, A, B, X, Y):
