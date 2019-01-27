@@ -20,6 +20,7 @@ def unit_vector(vector):
     length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
     return [vector[0] / length, vector[1] / length]
 
+
 def projection(A, B, C):
     x1 = A.x
     y1 = A.y
@@ -38,6 +39,7 @@ def projection(A, B, C):
     y = y1 + u * py
     return [x, y]
 
+
 def mid_point(v1, v2):
     v = [v2.x - v1.x, v2.y - v1.y]
     v[0], v[1] = v[0]/2, v[1]/2
@@ -55,6 +57,12 @@ class Feature():
 class Vertex(Feature):
 
     def __init__(self, canvas, x, y, marked=False):
+        """
+        :param canvas: Canvas
+        :param x: x point of vertex
+        :param y: y point of vertex
+        :param marked: True if its marked or False if its not
+        """
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -64,11 +72,20 @@ class Vertex(Feature):
         self.r = 5
 
     def update(self, x, y):
+        """
+        :param x: new x coordinate
+        :param y: new y coordinate
+        """
         self.x = x
         self.y = y
         self.voronoi_region = [[self.x, self.y], [self.x, self.y]]
 
     def draw_VR(self, color='blue', bold = False):
+        """
+        :param color: color of VR boundaries
+        :param bold:
+        :return: draws Voronoi plane
+        """
         if self.vr2 is not None and self.vr1 is not None:
             self.canvas.delete(self.vr1)
             self.canvas.delete(self.vr2)
@@ -84,36 +101,75 @@ class Vertex(Feature):
                 self.vr2 = self.canvas.create_line(self.voronoi_region[1], fill=color)
 
     def move_vr(self, x, y):
+        """
+        :param x: move VP for x points
+        :param y: move VP for y points
+        """
         self.canvas.move(self.vr1, x, y)
         self.canvas.move(self.vr2, x, y)
 
     def draw(self, canvas):
+        """
+        :param canvas: Canvas
+        :return: draws vertex
+        """
         self.canvas = canvas
         self.id = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r,
                                           fill='black')
 
     def update_color(self):
-        self.canvas.itemconfig(self.id, fill='red')
+        """
+        :return: draws marked vertex
+        """
+        self.id = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r,
+                                          fill='red')
 
     def move(self, xx, yy):
+        """
+        :param xx: moves for xx points
+        :param yy: moves for yy points
+        :return: moves object
+        """
         self.canvas.move(self.id, xx, yy)
 
     def __eq__(self, v):
+        """
+        :param v: vertex
+        :return: return True if vertex is equivalent with input vertex
+        """
         return self.x == v.x and self.y == v.y
 
     def __add__(self, v):
+        """
+        :param v: vertex
+        :return: array, counts vertex with input vertex by their coordinates
+        """
         return [self.x + v.x, self.y + v.y]
 
     def __sub__(self, v):
+        """
+        :param v: vertex
+        :return: array, subtracts vertex with input vertex by their coordinates
+        """
         return [self.x - v.x, self.y - v.y]
 
     def __mul__(self, k):
+        """
+        :param k: float
+        :return: array, multiplies vertex by constant
+        """
         return [self.x * k, self.y * k]
 
 
 class Edge(Feature):
 
     def __init__(self, v1, v2, polygon, marked=False):
+        """
+        :param v1: first vertex
+        :param v2: second vertex
+        :param polygon: PolyObject reference
+        :param marked: False if its not marked, True if its marked
+        """
         self.v1 = v1
         self.v2 = v2
         self.polygon = polygon
@@ -121,17 +177,24 @@ class Edge(Feature):
         self.voronoi_region = self.create_voronoi_region()
         self.vr1 = self.vr2 = None
 
-    def update_color(self):
-        self.polygon.canvas.create_line(self.v1.x, self.v1.y, self.v2.x, self.v2.y, fill='red')
+    # def update_color(self):
+    #     self.polygon.canvas.create_line(self.v1.x, self.v1.y, self.v2.x, self.v2.y, fill='orange',
+    #                                     width=3)
 
     # def update(self, x1, y1, x2, y2):
     #     self.v1.update(x1, y1)
     #     self.v2.update(x2, y2)
 
     def get_directional_vector(self):
+        """
+        :return: directional vector
+        """
         return [self.v2.x - self.v1.x, self.v2.y - self.v1.y]
 
     def get_normal_vector(self):
+        """
+        :return: mormal vector
+        """
         directional = self.get_directional_vector()
         normal_vector = [-directional[1], directional[0]]
         vector = unit_vector(normal_vector)
@@ -146,10 +209,17 @@ class Edge(Feature):
         return vector
 
     def get_inverse_normal_vector(self):
+        """
+        :return: inverse normal vector
+        """
         normal = self.get_normal_vector()
         return [-normal[0], -normal[1]]
 
     def calculate_plain(self, v):
+        """
+        :param v: vertex
+        :return: normal vector and constant of plain
+        """
         n = unit_vector(self.get_directional_vector())
 
         if v == self.v2:
@@ -159,6 +229,9 @@ class Edge(Feature):
         return [n, -c]
 
     def create_voronoi_region(self):
+        """
+        :return: properties of VR of edge
+        """
         vector = self.get_normal_vector()
 
         vector[0] *= 1000
@@ -179,6 +252,11 @@ class Edge(Feature):
         return [[self.v1.x, self.v1.y, ax, ay], [self.v2.x, self.v2.y, bx, by]]
 
     def draw_VR(self, color='blue', bold = False):
+        """
+        :param color: color of VR boundaries
+        :param bold:
+        :return: draws Voronoi plane
+        """
         if self.vr2 is not None and self.vr1 is not None:
             self.polygon.canvas.delete(self.vr1)
             self.polygon.canvas.delete(self.vr2)
@@ -191,6 +269,10 @@ class Edge(Feature):
             self.vr2 = self.polygon.canvas.create_line(self.voronoi_region[1], fill=color)
 
     def move_vr(self, x, y):
+        """
+        :param x: moves for x points
+        :param y: moves for y points
+        """
         self.polygon.canvas.move(self.vr1, x, y)
         self.polygon.canvas.move(self.vr2, x, y)
 
@@ -198,19 +280,34 @@ class Edge(Feature):
         self.voronoi_region = self.create_voronoi_region()
 
     def __eq__(self,e):
+        """
+        :param e: edge
+        :return: True if edge is equivalent with input edge
+        """
         return self.v1 == e.v1 and self.v2 == e.v2
 
     def __mul__(self, k):
+        """
+        :param k: float
+        :return: multiplied directional vector of edge by constant
+        """
         v = self.get_directional_vector()
         return [v[0]*k, v[1]*k]
 
 class FeaturePair():
 
     def __init__(self, f1, f2):
+        """
+        :param f1: first feature, Edge/Vertex
+        :param f2: second feature, Edge/Vertex
+        """
         self.f1 = f1
         self.f2 = f2
 
     def type(self):
+        """
+        :return: type of case
+        """
         result = ''
         if isinstance(self.f1, Edge):
             result += 'E'
@@ -225,14 +322,22 @@ class FeaturePair():
         return result
 
     def swap(self):
+        """
+        :return: swapped features f1, f2
+        """
         tmp = self.f1
         self.f1 = self.f2
         self.f2 = tmp
 
 
 class PolyObject:
-    ### !!!!!!! Pridat pole alebo zoznam so zapamatanymi hranami, ktore spajaju vrcholy a pamatat si vrcholy
     def __init__(self, canvas, x, y, tag):
+        """
+        :param canvas: Canvas
+        :param x: x coordinate of polygon
+        :param y: y coordinate of polygon
+        :param tag: special tag for polygon
+        """
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -244,15 +349,22 @@ class PolyObject:
         self.features = []
 
     def draw(self, coords, color):
-        """ Coords - budem posielat suradnice bodov na vykreslenie poly-lineu
         """
-        # print(type(coords))
+        :param coords: coordinates of polygon
+        :param color: color of edges
+        :return: draws a polygon
+        """
         if self.is_active:
             self.id = self.canvas.create_polygon(*coords, fill=color, outline='red', width=3, tag=self.tag)
         else:
             self.id = self.canvas.create_polygon(*coords, fill=color, outline='black', width=1, tag=self.tag)
 
     def point_in_polygon(self, x, y):
+        """
+        :param x: integer
+        :param y: integer
+        :return: True if point lies in polygon
+        """
         n = len(self.vertices)
         v = False
 
@@ -270,7 +382,9 @@ class PolyObject:
         return v
 
     def set_active(self, state):
-        """ Zmena outline farby
+        """
+        :param state: 1 or 0
+        :return: changes outline of polygon
         """
         if state == 1:
             self.canvas.itemconfig(self.id, outline='red', width=3)
@@ -280,10 +394,16 @@ class PolyObject:
             self.is_active = 0
 
     def draw_vertices(self):
+        """
+        :return: draws vertices of polygon
+        """
         for vertex in self.vertices:
             vertex.draw(self.canvas)
 
     def set_features(self):
+        """
+        :return: array of vertices and edges of polygon
+        """
         if len(self.vertices) == 0 and len(self.edges) == 0:
             ## init features
             for i in range(0, len(self.coords), 2):
@@ -307,10 +427,16 @@ class PolyObject:
         self.features = self.vertices + self.edges
 
     def set_coords(self, coords):
+        """
+        :param coords: coordinates of polygon
+        """
         self.coords = coords
         self.set_features()
 
     def get_centroid(self):
+        """
+        :return: center of polygon
+        """
         self.coords.append(self.coords[0])
         self.coords.append(self.coords[1])
         A = 0
@@ -333,6 +459,9 @@ class PolyObject:
         return [x, y]
 
     def rotate(self):
+        """
+        Calculates rotated coordinates of polygon
+        """
         matrix = [[math.cos(math.radians(15)), math.sin(math.radians(15))],
                   [-math.sin(math.radians(15)), math.cos(math.radians(15))]]
 
@@ -352,20 +481,13 @@ class PolyObject:
             self.coords[i + 1] += center[1]
 
     def move(self, xx, yy):
-        # matrix = [[1, 0, 0],
-        # 		  [0, 1, 0],
-        # 		  [xx - self.x, yy - self.y, 1]]
-        # self.x = xx - self.x
-        # self.y = yy - self.y
-        # self.coords = multiply(matrix, self.coords)
+        """
+        :param xx: moves polygon for xx points
+        :param yy: moves polygon for yy points
+        """
         self.canvas.move(self.id, xx, yy)
 
     def __eq__(self,e):
-        """
-        Input: Edge
-        Output: Bloolean
-        Function returns True if Edge is equivalent with input Edge
-        """
         return self.v1 == e.v1 and self.v2 == e.v2
 
 
@@ -396,12 +518,11 @@ class Playground(Tk):
         self.playground.bind("<B1-Motion>", self.drag)
         self.playground.bind("<ButtonRelease-1>", self.drop)
 
-
-
     def rotate_object(self):
-
+        """
+        Rotates object
+        """
         if self.p1.is_active:
-            # print(self.playground.coords(self.p1.id))
             self.obj_id = self.p1.id
             self.p1.rotate()
             self.redraw_canvas(False)
@@ -414,9 +535,7 @@ class Playground(Tk):
 
 
         elif self.p2.is_active:
-            # print(self.playground.coords(self.p2.id))
             self.obj_id = self.p2.id
-            # self.p2.set_coords(rotated_points)
             self.p2.rotate()
             self.redraw_canvas(False)
             self.p2.set_coords(self.playground.coords(self.p2.id))
@@ -431,7 +550,8 @@ class Playground(Tk):
             return
 
     def load_from_file(self, file):
-        """ Naciatnie suradnic zo suboru
+        """
+        :param file: text file with coordinates
         """
         coords = []
         f = open(file, 'r')
@@ -442,45 +562,41 @@ class Playground(Tk):
         self.create_polygons(coords)
 
     def create_polygons(self, polygons):
-        """ Z nacitanych suradnic vytvor objekty polygonov a vykresli ich
+        """
+        :param polygons: coordinates of polygons loaded from text file
+        Creates and draws polygon
         """
         coords_1 = polygons[0]
         coords_2 = polygons[1]
         self.p1 = PolyObject(self.playground, 100, 100, 'object1')
-        # print('Suradnice bodov objektu p1: ', self.playground.coords(self.p1.id))
         self.p2 = PolyObject(self.playground, 400, 400, 'object2')
         self.polygons_array.append(self.p1)
         self.polygons_array.append(self.p2)
-        # print(self.polygons_array)
 
         self.p1.draw(coords_1, 'white')
         self.p2.draw(coords_2, 'white')
         self.p1.set_coords(self.playground.coords(self.p1.id))
         self.p2.set_coords(self.playground.coords(self.p2.id))
 
-        # print('coords   ', self.p1.coords)
-
-        # self.v_clip(self.p1, self.p2, None, None)
-
     def redraw_canvas(self, draw_vr=True):
+        """
+        Redraws objects in canvas
+        """
         self.playground.delete('all')
         self.p1.draw(self.p1.coords, 'white')
         self.p2.draw(self.p2.coords, 'navy')
 
         if draw_vr:
-            for v in self.p1.vertices:
-                v.draw_VR()
-
             for e in self.p1.edges:
                 e.draw_VR('green')
-
-            for v in self.p2.vertices:
-                v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
 
     def click(self, event):
+        """
+        :param event: click event
+        """
         self.obj_id = event.widget.find_closest(event.x, event.y)[0]
         if self.playground.gettags(event.widget.find_closest(event.x, event.y)):
             self.obj_tag = self.playground.gettags(event.widget.find_closest(event.x, event.y))[0]
@@ -493,35 +609,29 @@ class Playground(Tk):
             self.p2.set_active(1)
             self.p1.set_active(2)
 
-        # self.initial_coords = self.playground.coords(self.obj_id)
         self.ex, self.ey = event.x, event.y
 
     def drop(self, event):
+        """
+        :param event: click event
+        """
         if self.p1.is_active:
             self.p1.set_coords(self.playground.coords(self.p1.id))
         elif self.p2.is_active:
             self.p2.set_coords(self.playground.coords(self.p2.id))
-        # self.p1.get_centroid()
-        # self.p2.get_centroid()
 
     def drag(self, event):
-        # if self.obj_tag == ('object' + str(self.obj_id)):
+        """
+        :param event: click event
+        """
         self.playground.move(self.obj_id, event.x - self.ex, event.y - self.ey)
         if self.p1.is_active:
             self.p1.set_coords(self.playground.coords(self.p1.id))
-            # for e in self.p1.edges:
-            #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            for v in self.p1.vertices:
-                v.draw_VR()
 
             for e in self.p1.edges:
                 e.draw_VR('green')
         elif self.p2.is_active:
             self.p2.set_coords(self.playground.coords(self.p2.id))
-            # for e in self.p2.edges:
-            #     e.move_vr(event.x - self.ex, event.y - self.ey)
-            for v in self.p2.vertices:
-                v.draw_VR()
 
             for e in self.p2.edges:
                 e.draw_VR()
@@ -533,24 +643,16 @@ class Playground(Tk):
             for v in self.p2.vertices:
                 v.move(event.x - self.ex, event.y - self.ey)
 
-        # if self.p1.is_active:
-        # self.p1.set_coords(self.playground.coords(self.p1.id))
-        # elif self.p2.is_active:
-        # self.p2.set_coords(self.playground.coords(self.p2.id))
         self.ex, self.ey = event.x, event.y
-        # self.redraw_canvas()
         self.start_v_clip()
 
     def start_v_clip(self):
         """
-            Ready to start the v_clip algorithm
+        Ready to start the v_clip algorithm
         """
         for feature in self.polygons_array[0].features:
-            # print('som tu', self.polygons_array[0], self.polygons_array[1],
-            #                    feature, self.polygons_array[1].features)
-
             data = self.v_clip(self.polygons_array[0], self.polygons_array[1],
-                                         feature, self.polygons_array[1].features[0])
+                               feature, self.polygons_array[1].features[0])
 
             if self.id_segment is not None:
                 self.playground.delete(self.id_segment)
@@ -560,10 +662,9 @@ class Playground(Tk):
                 self.playground.delete(self.highlighted_feature2)
 
             if type(self.features_1) == Vertex and type(self.features_2) == Vertex:
-
                 self.id_segment = self.playground.create_line(self.features_1.x, self.features_1.y,
-                                            self.features_2.x, self.features_2.y, fill='orange',
-                                            width=3)
+                                                              self.features_2.x, self.features_2.y, fill='orange',
+                                                              width=3)
                 self.highlighted_feature1 = self.playground.create_oval(self.features_1.x - 5, self.features_1.y - 5,
                                                                         self.features_1.x + 5, self.features_1.y + 5,
                                                                         fill='yellow')
@@ -584,10 +685,8 @@ class Playground(Tk):
 
                 self.highlighted_feature2 = self.playground.create_line(self.features_2.v1.x, self.features_2.v1.y,
                                                                         self.features_2.v2.x, self.features_2.v2.y,
-                                                                        fill='yellow', width = 3)
+                                                                        fill='yellow', width=3)
 
-                # self.features_1.draw_VR('yellow', True)
-                # self.features_2.draw_VR('black', True)
             if type(self.features_1) == Edge and type(self.features_2) == Edge:
                 mp1 = mid_point(self.features_1.v1, self.features_1.v2)
                 mp2 = mid_point(self.features_2.v1, self.features_2.v2)
@@ -601,9 +700,13 @@ class Playground(Tk):
                                                                         self.features_2.v2.x, self.features_2.v2.y,
                                                                         fill='yellow', width=3)
 
-
     def v_clip(self, A, B, X, Y):
-        # print(A, B, X, Y)
+        """
+        :param A: first polygon
+        :param B: second polygon
+        :param X: respective initial features X
+        :param Y: respective initial features Y
+        """
         self.polygon_1 = A
         self.polygon_2 = B
         self.features_1 = X
@@ -627,10 +730,6 @@ class Playground(Tk):
                 Sn = {FeaturePair(self.features_1, E) for E in self.polygon_1.edges if E.v1 == self.features_1 or E.v2 == self.features_1}
                 if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
-                # u = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
-                #
-                # return [self.features_1.x - (self.features_2.v1.x + ((u[0] * (self.features_1.x - self.features_2.v1.x)) / (u[0] * u[0])) * u[0]),
-                #         self.features_1.y - (self.features_2.v1.y + ((u[1] * (self.features_1.y - self.features_2.v1.y)) / (u[1] * u[1])) * u[1])]
                 u = self.features_2.get_directional_vector()
                 w = self.features_1 - self.features_2.v1
                 q = (u[0] * w[0] + u[1] * w[1]) / (
@@ -648,18 +747,6 @@ class Playground(Tk):
                 if self.clip_edge(self.features_2, self.features_1, Sn):
                     continue
 
-                # ux = [self.features_1.v2.x - self.features_1.v1.x, self.features_1.v2.y - self.features_1.v1.y]
-                # uy = [self.features_2.v2.x - self.features_2.v1.x, self.features_2.v2.y - self.features_2.v1.y]
-                # nx = [ux[1], -ux[0]]
-                # ny = [uy[1], -uy[0]]
-                #
-                # tmp1 = [self.features_1.v1.x + ((ny[0] * (self.features_2.v1.x - self.features_1.v1.x)) / (ny[0] * ux[0])) * ux[0],
-                #         self.features_1.v1.y + ((ny[1] * (self.features_2.v1.y - self.features_1.v1.y)) / (ny[1] * ux[1])) * ux[1]]
-                #
-                # tmp2 = [self.features_2.v1.x + ((nx[0] * (self.features_1.v1.x - self.features_2.v1.x)) / (nx[0] * uy[0])) * uy[0],
-                #         self.features_2.v1.y + ((nx[1] * (self.features_1.v1.y - self.features_2.v1.y)) / (nx[1] * uy[1])) * uy[1]]
-                # return [tmp1[0] - tmp2[0], tmp1[1] - tmp2[1]]
-
                 ux, uy = self.features_1.get_directional_vector(), self.features_2.get_directional_vector()
                 nx = [(uy[1] * (ux[0] * uy[1] - uy[0] * ux[1])), (ux[0] * uy[1] - uy[0] * ux[1]) * uy[0]]
                 ny = [(ux[1] * (uy[0] * ux[1] - ux[0] * uy[1])), (uy[0] * ux[1] - ux[0] * uy[1]) * ux[0]]
@@ -676,13 +763,10 @@ class Playground(Tk):
                 c1 = [uy[0] * q1, uy[1] * q1]
                 v1 = [self.features_2.v1.x + c1[0], self.features_2.v1.y + c1[0]]
 
-                ##                        print([v[0] - v1[0], v[1] - v1[1]],'VYSL PRE EE', self.feat1, self.feat2)
                 return [v[0] - v1[0], v[1] - v1[1]]
 
             elif pair.type() == "EV":
-                # pair.swap()  # swap(X, Y)
                 self.features_1, self.features_2 = self.features_2, self.features_1
-                # swap(A, B)
                 tmp = self.polygon_1
                 self.polygon_1 = self.polygon_2
                 self.polygon_2 = tmp
@@ -707,7 +791,6 @@ class Playground(Tk):
         return self.update_clear(N, Sn)
 
     def ds(self, v, p1, p2):
-
         if p1 == p2.v1:
             p = p2.calculate_plain(p2.v1)
         else:
