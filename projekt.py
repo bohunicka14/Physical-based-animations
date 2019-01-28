@@ -5,6 +5,11 @@ import math
 
 
 def multiply(m, array):
+    """
+    :param m:matrix
+    :param array: list of coordinates
+    :return: multiply list of points with matrix
+    """
     for i in array:
         i = int(i)
 
@@ -17,11 +22,19 @@ def multiply(m, array):
 
 
 def unit_vector(vector):
+    """
+    :param vector
+    :return: return vector with lenght = 1
+    """
     length = math.sqrt(vector[0] ** 2 + vector[1] ** 2)
     return [vector[0] / length, vector[1] / length]
 
 
 def projection(A, B, C):
+    """
+    :param A, B, C: vertex
+    :return: projection of point C to line segment AB
+    """
     x1 = A.x
     y1 = A.y
     x2 = B.x
@@ -41,6 +54,10 @@ def projection(A, B, C):
 
 
 def mid_point(v1, v2):
+    """
+    :param v1, v2: vertex
+    :return: middle point between two input vertices
+    """
     v = [v2.x - v1.x, v2.y - v1.y]
     v[0], v[1] = v[0]/2, v[1]/2
     return [ v[0] + v1.x, v[1] + v1.y ]
@@ -584,7 +601,7 @@ class Playground(Tk):
         """
         self.playground.delete('all')
         self.p1.draw(self.p1.coords, 'white')
-        self.p2.draw(self.p2.coords, 'navy')
+        self.p2.draw(self.p2.coords, 'white')
 
         if draw_vr:
             for e in self.p1.edges:
