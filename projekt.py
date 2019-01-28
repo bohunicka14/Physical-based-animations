@@ -851,9 +851,9 @@ class Playground(Tk):
 
     def update_feature(self, f, value):
         """
-        Input: Vertex/Edge, Vertex/Edge
-        Output:
-        Function updates the feature f to new feature value
+        :param f: Vertex/Edge
+        :param value: Vertex/Edge
+        :return Function updates the feature f to new feature value
         """
         try:
             if self.features_1 == f:
